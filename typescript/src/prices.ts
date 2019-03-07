@@ -21,64 +21,40 @@ async function createApp() {
 
         res.send()
     })
-    app.get('/prices', async (req, res) => {
 
-        // db
-        let liftPassType = req.query.type;
-        let liftPassDate = req.query.date;
-        let liftPassAge = req.query.age;
-        let complete = (payload) => {
-            res.send(payload)
-        }
-        const repository = {
-            queryPriceFor: async (type) => {
-                const result = await connection.query(
-                    'SELECT cost FROM `base_price` ' +
-                    'WHERE `type` = ? ',
-                    [liftPassType]);
-                return result[0][0].cost;
-            },
-
-
-            queryHolidays: async () => {
-                const result = await connection.query(
-                    'SELECT * FROM `holidays`');
-                return result[0];
-            }
-        };
-
+    async function domainLogic(repository, liftPass, complete) {
         const holidays = await repository.queryHolidays();
-        let basePriceCost = await repository.queryPriceFor(liftPassType);
+        let basePriceCost = await repository.queryPriceFor(liftPass.liftPassType);
         let reduction;
         let isHoliday;
-        if (liftPassAge < 6) {
+        if (liftPass.liftPassAge < 6) {
             complete({cost: 0})
         } else {
             reduction = 0;
-            if (liftPassType !== 'night') {
+            if (liftPass.liftPassType !== 'night') {
                 for (let row of holidays) {
                     const holidayDate = row.holiday.toISOString().split('T')[0]
-                    if (liftPassDate && liftPassDate === holidayDate) {
+                    if (liftPass.liftPassDate && liftPass.liftPassDate === holidayDate) {
                         isHoliday = true
                     }
 
                 }
-                if (!isHoliday && new Date(liftPassDate).getDay() === 0) {
+                if (!isHoliday && new Date(liftPass.liftPassDate).getDay() === 0) {
                     reduction = 35
                 }
 
                 // TODO apply reduction for others
-                if (liftPassAge < 15) {
+                if (liftPass.liftPassAge < 15) {
                     complete({cost: Math.ceil(basePriceCost * .7)})
                 } else {
-                    if (liftPassAge === undefined) {
+                    if (liftPass.liftPassAge === undefined) {
                         let cost = basePriceCost
                         if (reduction) {
                             cost = cost * (1 - reduction / 100)
                         }
                         complete({cost: Math.ceil(cost)})
                     } else {
-                        if (liftPassAge > 64) {
+                        if (liftPass.liftPassAge > 64) {
                             let cost = basePriceCost * .75
                             if (reduction) {
                                 cost = cost * (1 - reduction / 100)
@@ -94,8 +70,8 @@ async function createApp() {
                     }
                 }
             } else {
-                if (liftPassAge >= 6) {
-                    if (liftPassAge > 64) {
+                if (liftPass.liftPassAge >= 6) {
+                    if (liftPass.liftPassAge > 64) {
                         complete({cost: Math.ceil(basePriceCost / 2.5)})
                     } else {
                         complete({cost: basePriceCost});
@@ -105,6 +81,39 @@ async function createApp() {
                 }
             }
         }
+    }
+
+    app.get('/prices', async (req, res) => {
+
+        // input
+        let liftPassType = req.query.type;
+        let liftPassDate = req.query.date;
+        let liftPassAge = req.query.age;
+        const liftPass = { liftPassType, liftPassAge, liftPassDate}
+
+        // ports
+        let complete = (payload) => {
+            res.send(payload)
+        }
+        // adapters
+        const repository = {
+            queryPriceFor: async (type) => {
+                const result = await connection.query(
+                    'SELECT cost FROM `base_price` ' +
+                    'WHERE `type` = ? ',
+                    [liftPass.liftPassType]);
+                return result[0][0].cost;
+            },
+
+
+            queryHolidays: async () => {
+                const result = await connection.query(
+                    'SELECT * FROM `holidays`');
+                return result[0];
+            }
+        };
+
+        await domainLogic(repository, liftPass, complete);
     })
     return {app, connection}
 }
