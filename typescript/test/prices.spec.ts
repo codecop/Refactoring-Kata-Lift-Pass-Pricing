@@ -37,20 +37,20 @@ describe('prices', () => {
             });
         });
 
-    [
-        {age: 25, expectedCost: 19},
-        {age: 65, expectedCost: 8},
-        {age: 5, expectedCost: 0},
-    ]
-        .forEach(({age, expectedCost}) => {
-            it('works for night passes', async () => {
-                const {body} = await request(app)
-                    .get(`/prices?type=night&age=${age}`)
-
-                expect(body.cost).equal(expectedCost)
-
-            });
-        });
+    // [
+    //     {age: 25, expectedCost: 19},
+    //     {age: 65, expectedCost: 8},
+    //     {age: 5, expectedCost: 0},
+    // ]
+    //     .forEach(({age, expectedCost}) => {
+    //         it('works for night passes', async () => {
+    //             const {body} = await request(app)
+    //                 .get(`/prices?type=night&age=${age}`)
+    //
+    //             expect(body.cost).equal(expectedCost)
+    //
+    //         });
+    //     });
 
     [
         {age: 15, expectedCost: 35, date: '2019-02-22'},
