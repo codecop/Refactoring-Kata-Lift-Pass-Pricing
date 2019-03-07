@@ -30,25 +30,25 @@ async function createApp() {
         let complete = (payload) => {
             res.send(payload)
         }
+        const repository = {
+            queryPriceFor: async (type) => {
+                const result = await connection.query(
+                    'SELECT cost FROM `base_price` ' +
+                    'WHERE `type` = ? ',
+                    [liftPassType]);
+                return result[0][0].cost;
+            },
 
-        const queryPriceFor = async (type) => {
-            const result = await connection.query(
-                'SELECT cost FROM `base_price` ' +
-                'WHERE `type` = ? ',
-                [liftPassType]);
-            return result[0][0].cost;
-        }
 
+            queryHolidays: async () => {
+                const result = await connection.query(
+                    'SELECT * FROM `holidays`');
+                return result[0];
+            }
+        };
 
-
-        const queryHolidays = async () => {
-            const result = await connection.query(
-                'SELECT * FROM `holidays`');
-            return result[0];
-        }
-        const holidays = await queryHolidays();
-
-        let basePriceCost = await queryPriceFor(liftPassType);
+        const holidays = await repository.queryHolidays();
+        let basePriceCost = await repository.queryPriceFor(liftPassType);
         let reduction;
         let isHoliday;
         if (liftPassAge < 6) {
