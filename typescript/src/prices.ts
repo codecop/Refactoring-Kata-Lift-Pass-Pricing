@@ -39,12 +39,16 @@ async function createApp() {
             return result[0][0].cost;
         }
 
+
+
+        const queryHolidays = async () => {
+            const result = await connection.query(
+                'SELECT * FROM `holidays`');
+            return result[0];
+        }
+        const holidays = await queryHolidays();
+
         let basePriceCost = await queryPriceFor(liftPassType);
-        const holidays = (await connection.query(
-            'SELECT * FROM `holidays`'
-        ))[0];
-
-
         let reduction;
         let isHoliday;
         if (liftPassAge < 6) {
@@ -94,7 +98,7 @@ async function createApp() {
                     if (liftPassAge > 64) {
                         complete({cost: Math.ceil(basePriceCost / 2.5)})
                     } else {
-                        complete({cost: basePriceCost });
+                        complete({cost: basePriceCost});
                     }
                 } else {
                     complete({cost: 0})
