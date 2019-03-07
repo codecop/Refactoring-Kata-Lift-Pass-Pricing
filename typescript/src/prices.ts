@@ -31,18 +31,15 @@ async function createApp() {
             res.send(payload)
         }
 
-        const getBasePrice = async (type) => {
-            const basePriceX = await connection.query(
+        const queryPriceFor = async (type) => {
+            const result = await connection.query(
                 'SELECT cost FROM `base_price` ' +
                 'WHERE `type` = ? ',
                 [liftPassType]);
-
-            const basePrice = basePriceX [0][0]
-            return basePrice.cost;
+            return result[0][0].cost;
         }
 
-
-        let basePriceCost = await getBasePrice(liftPassType);
+        let basePriceCost = await queryPriceFor(liftPassType);
         const holidays = (await connection.query(
             'SELECT * FROM `holidays`'
         ))[0];
