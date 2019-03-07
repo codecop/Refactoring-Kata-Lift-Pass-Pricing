@@ -31,11 +31,6 @@ async function createApp() {
             res.send(payload)
         }
 
-        const basePrice = (await connection.query(
-            'SELECT cost FROM `base_price` ' +
-            'WHERE `type` = ? ',
-            [liftPassType]))[0][0]
-
         const getBasePrice = async (type) => {
             const basePriceX = await connection.query(
                 'SELECT cost FROM `base_price` ' +
@@ -102,7 +97,7 @@ async function createApp() {
                     if (liftPassAge > 64) {
                         complete({cost: Math.ceil(basePriceCost / 2.5)})
                     } else {
-                        complete(basePrice)
+                        complete({cost: basePriceCost });
                     }
                 } else {
                     complete({cost: 0})
