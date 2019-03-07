@@ -4,7 +4,7 @@ import mysql from "mysql2/promise"
 async function createApp() {
     const app = express()
 
-    let connectionOptions = {host: 'localhost', user: 'root', port: 3306, database: 'lift_pass' }
+    let connectionOptions = {host: 'localhost', user: 'root', port: 3306, database: 'lift_pass'}
     const connection = await mysql.createConnection(connectionOptions);
 
     // cost, type, date, age,
@@ -31,11 +31,23 @@ async function createApp() {
             res.send(payload)
         }
 
-        const result = (await connection.query(
+        const basePrice = (await connection.query(
             'SELECT cost FROM `base_price` ' +
             'WHERE `type` = ? ',
             [liftPassType]))[0][0]
 
+        const getBasePrice = async (type) => {
+            const basePriceX = await connection.query(
+                'SELECT cost FROM `base_price` ' +
+                'WHERE `type` = ? ',
+                [liftPassType]);
+
+            const basePrice = basePriceX [0][0]
+            return basePrice.cost;
+        }
+
+
+        let basePriceCost = await getBasePrice(liftPassType);
         const holidays = (await connection.query(
             'SELECT * FROM `holidays`'
         ))[0];
@@ -61,23 +73,23 @@ async function createApp() {
 
                 // TODO apply reduction for others
                 if (liftPassAge < 15) {
-                    complete({cost: Math.ceil(result.cost * .7)})
+                    complete({cost: Math.ceil(basePriceCost * .7)})
                 } else {
                     if (liftPassAge === undefined) {
-                        let cost = result.cost
+                        let cost = basePriceCost
                         if (reduction) {
                             cost = cost * (1 - reduction / 100)
                         }
                         complete({cost: Math.ceil(cost)})
                     } else {
                         if (liftPassAge > 64) {
-                            let cost = result.cost * .75
+                            let cost = basePriceCost * .75
                             if (reduction) {
                                 cost = cost * (1 - reduction / 100)
                             }
                             complete({cost: Math.ceil(cost)})
                         } else {
-                            let cost = result.cost
+                            let cost = basePriceCost
                             if (reduction) {
                                 cost = cost * (1 - reduction / 100)
                             }
@@ -88,9 +100,9 @@ async function createApp() {
             } else {
                 if (liftPassAge >= 6) {
                     if (liftPassAge > 64) {
-                        complete({cost: Math.ceil(result.cost / 2.5)})
+                        complete({cost: Math.ceil(basePriceCost / 2.5)})
                     } else {
-                        complete(result)
+                        complete(basePrice)
                     }
                 } else {
                     complete({cost: 0})
