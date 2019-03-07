@@ -27,26 +27,27 @@ async function createApp() {
         let liftPassType = req.query.type;
         let liftPassDate = req.query.date;
         let liftPassAge = req.query.age;
+        let complete = (payload) => {
+            res.send(payload)
+        }
 
         const result = (await connection.query(
             'SELECT cost FROM `base_price` ' +
             'WHERE `type` = ? ',
             [liftPassType]))[0][0]
+
+        const holidays = (await connection.query(
+            'SELECT * FROM `holidays`'
+        ))[0];
+
+
         let reduction;
         let isHoliday;
-
-        let complete = (payload) => {
-            res.send(payload)
-        }
         if (liftPassAge < 6) {
             complete({cost: 0})
         } else {
             reduction = 0;
             if (liftPassType !== 'night') {
-
-                const holidays = (await connection.query(
-                    'SELECT * FROM `holidays`'
-                ))[0]
                 for (let row of holidays) {
                     const holidayDate = row.holiday.toISOString().split('T')[0]
                     if (liftPassDate && liftPassDate === holidayDate) {
