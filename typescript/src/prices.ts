@@ -82,7 +82,22 @@ async function createApp() {
             }
         }
     }
+    const repository = {
+        queryPriceFor: async (type) => {
+            const result = await connection.query(
+                'SELECT cost FROM `base_price` ' +
+                'WHERE `type` = ? ',
+                [type]);
+            return result[0][0].cost;
+        },
 
+
+        queryHolidays: async () => {
+            const result = await connection.query(
+                'SELECT * FROM `holidays`');
+            return result[0];
+        }
+    };
     app.get('/prices', async (req, res) => {
 
         // input
@@ -96,22 +111,7 @@ async function createApp() {
             res.send(payload)
         }
         // adapters
-        const repository = {
-            queryPriceFor: async (type) => {
-                const result = await connection.query(
-                    'SELECT cost FROM `base_price` ' +
-                    'WHERE `type` = ? ',
-                    [liftPass.liftPassType]);
-                return result[0][0].cost;
-            },
 
-
-            queryHolidays: async () => {
-                const result = await connection.query(
-                    'SELECT * FROM `holidays`');
-                return result[0];
-            }
-        };
 
         await domainLogic(repository, liftPass, complete);
     })
